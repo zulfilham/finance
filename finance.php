@@ -1,7 +1,7 @@
 <?php
 
 class finance {
-   private $data_filename = "D:/Zulf/finance/.cache.dat", $data, $first_data, $second_data, $total, $arguments, $count_arguments;
+   private $data_filename = __DIR__ . "/.cache.dat", $data, $first_data, $second_data, $total, $arguments, $count_arguments;
 
    private function cache_data () {
       $data = serialize (array_merge ($this->first_data, $this->second_data));
