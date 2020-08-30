@@ -1,194 +1,287 @@
 <?php
 
 class finance {
-   private $data_filename = __DIR__ . "/.cache.dat", $data, $first_data, $second_data, $total, $arguments, $count_arguments;
+   private $data = [["nominal" => 500, "count" => 0], ["nominal" => 1000, "count" => 0], ["nominal" => 1000, "count" => 0], ["nominal" => 2000, "count" => 0], ["nominal" => 5000, "count" => 0], ["nominal" => 10000, "count" => 0], ["nominal" => 20000, "count" => 0], ["nominal" => 50000, "count" => 0], ["nominal" => 100000, "count" => 0]];
+   private $data_filename = __DIR__ . "\.cache.dat";
+   private $total = 0;
+   private $succeed, $error_message;
+
+   public function __construct () {
+      $this->load_data ();
+      $this->count_total ();
+   }
 
    private function cache_data () {
-      $data = serialize (array_merge ($this->first_data, $this->second_data));
-      return file_put_contents ($this->data_filename, $data);
+      file_put_contents ($this->data_filename, serialize ($this->data));
    }
 
    private function load_data () {
-      if (file_exists ($this->data_filename)) {
-         $contents = file_get_contents ($this->data_filename);
-         $this->data = unserialize ($contents);
-      }
-      else
-         $this->data = [["nominal" => 500, "count" => 0], ["nominal" => 1000, "count" => 0], ["nominal" => 1000, "count" => 0], ["nominal" => 2000, "count" => 0], ["nominal" => 5000, "count" => 0], ["nominal" => 10000, "count" => 0], ["nominal" => 20000, "count" => 0], ["nominal" => 50000, "count" => 0], ["nominal" => 100000, "count" => 0]];
-      $this->first_data = array_slice ($this->data, 0, 2);
-      $this->second_data = array_slice ($this->data, 2);
+      if (file_exists ($this->data_filename) and $contents = @unserialize (file_get_contents ($this->data_filename)))
+         $this->data = $contents;
    }
 
-   public function revenue () {
-      foreach ($this->arguments as $pointer => $argument) {
+   public function get_data () {
+      return $this->data;
+   }
+
+   private function count_total () {
+      $this->total = 500 * $this->data[0]["count"] + 1000 * $this->data[1]["count"] + 1000 * $this->data[2]["count"] + 2000 * $this->data[3]["count"] + 5000 * $this->data[4]["count"] + 10000 * $this->data[5]["count"] + 20000 * $this->data[6]["count"] + 50000 * $this->data[7]["count"] + 100000 * $this->data[8]["count"];
+   }
+
+   public function get_total () {
+      return $this->total;
+   }
+
+   public function revenue ($arguments) {
+      $initial_data = $this->data;
+
+      foreach ($arguments as $pointer => $argument) {
          $nth = $pointer + 2;
 
-         if (preg_match ("![0-9]+:[0-9]+!", $argument)) {
-            list ($nominal, $count) = explode (":", $argument);
-            $key = array_search ($nominal, array_column ($this->second_data, "nominal"));
-            $is_valid_count = $count > 0;
-
-            if ($key !== false and $is_valid_count) {
-               if ($this->confirm ($nominal, $count, true)) {
-                  $this->second_data[$key]["count"] += $count;
-                  $this->cache_data ();
-                  echo "Nominal '$nominal' bertambah '$count'\n";
+         if (preg_match ("!^(500{1,3}|1000{1,3}|2000{1,2})(=|:)([1-9][0-9]*)$!", $argument, $items)) {
+            if ($items[2] === ":") {
+               switch ($items[1]) {
+                  case "500":
+                     $this->data[0]["count"] += $items[3];
+                     break;
+                  case "1000":
+                     $this->data[1]["count"] += $items[3];
+                     break;
+                  default:
+                     $this->succeed = false;
+                     $this->error_message = "Eror fatal: nominal '$items[1]' pada parameter ke $nth tidak valid.\n";
+                     return null;
                }
-               else
-                  echo "Nominal '$nominal' batal ditambahkan '$count'.\n";
             }
-
-            if ($key === false) fwrite (STDERR, "Peringatan: nominal '$nominal' di parameter ke $nth tidak valid, nominal yang valid adalah 1000, 2000, 5000, 10000, 20000, 50000 dan 100000.\n");
-            if (!$is_valid_count) fwrite (STDERR, "Peringatan: jumlah '$count' di parameter ke $nth tidak valid, jumlah yang valid harus lebih besar dari 0.\n");
-         }
-         elseif (preg_match ("![0-9]+=[0-9]+!", $argument)) {
-            list ($nominal, $count) = explode ("=", $argument);
-            $key = array_search ($nominal, array_column ($this->first_data, "nominal"));
-            $is_valid_count = $count > 0;
-
-            if ($key !== false and $is_valid_count) {
-               if ($this->confirm ($nominal, $count, true)) {
-                  $this->first_data[$key]["count"] += $count;
-                  $this->cache_data ();
-                  echo "Nominal '$nominal' bertambah '$count'\n";
+            else {
+               switch ($items[1]) {
+                  case "1000":
+                     $this->data[2]["count"] += $items[3];
+                     break;
+                  case "2000":
+                     $this->data[3]["count"] += $items[3];
+                     break;
+                  case "5000":
+                     $this->data[4]["count"] += $items[3];
+                     break;
+                  case "10000":
+                     $this->data[5]["count"] += $items[3];
+                     break;
+                  case "20000":
+                     $this->data[6]["count"] += $items[3];
+                     break;
+                  case "50000":
+                     $this->data[7]["count"] += $items[3];
+                     break;
+                  case "100000":
+                     $this->data[8]["count"] += $items[3];
+                     break;
+                  default:
+                     $this->succeed = false;
+                     $this->error_message = "Eror fatal: nominal '$items[1]' pada parameter ke $nth tidak valid.\n";
+                     return null;
                }
-               else
-                  echo "Nominal '$nominal' batal ditambahkan '$count'.\n";
             }
-
-            if ($key === false) fwrite (STDERR, "Peringatan: nominal '$nominal' di parameter ke $nth tidak valid, nominal yang valid adalah 500 dan 1000.\n");
-            if (!$is_valid_count) fwrite (STDERR, "Peringatan: jumlah '$count' di parameter ke $nth tidak valid, jumlah yang valid harus lebih besar dari 0.\n");
          }
-         else
-            fwrite (STDERR, "Peringatan: argumen '$argument' di parameter ke $nth tidak valid.\n");
+         else {
+            $this->succeed = false;
+            $this->error_message = "Eror fatal: argumen '$argument' pada parameter ke $nth tidak valid.\n";
+            return null;
+         }
+      }
+
+      if ($this->confirm_revenue ($initial_data, $this->data)) {
+         $this->succeed = true;
+         $this->count_total ();
+         $this->cache_data ();
+      }
+      else {
+         $this->succeed = false;
+         $this->error_message .= "Pemasukkan uang dibatalkan.\n";
       }
    }
 
-   public function spending () {
-      foreach ($this->arguments as $pointer => $argument) {
-         $nth = $pointer + 2;
-
-         if (preg_match ("![0-9]+:[0-9]+!", $argument)) {
-            list ($nominal, $count) = explode (":", $argument);
-            $key = array_search ($nominal, array_column ($this->second_data, "nominal"));
-            $is_valid_count = $count > 0;
-
-            if ($key !== false and $is_valid_count and $is_sufficient = $this->second_data[$key]["count"] >= $count) {
-               if ($this->confirm ($nominal, $count, false)) {
-                  $this->second_data[$key]["count"] -= $count;
-                  $this->cache_data ();
-                  echo "Nominal '$nominal' berkurang '$count'\n";
-               }
-               else
-                  echo "Nominal '$nominal' batal dikurangi '$count'.\n";
-            }
-
-            if ($key === false) fwrite (STDERR, "Peringatan: nominal '$nominal' di parameter ke $nth tidak valid, nominal yang valid adalah 1000, 2000, 5000, 10000, 20000, 50000 dan 100000.\n");
-            if (!$is_valid_count) fwrite (STDERR, "Peringatan: jumlah '$count' di parameter ke $nth tidak valid, jumlah yang valid harus lebih besar dari 0.\n");
-            if (isset ($is_sufficient) and !$is_sufficient) fwrite (STDERR, "Peringatan: jumlah nominal tidak cukup, nominal '$nominal' hanya '{$this->second_data[$key]["count"]}'.\n");
-         }
-         elseif (preg_match ("![0-9]+=[0-9]+!", $argument)) {
-            list ($nominal, $count) = explode ("=", $argument);
-            $key = array_search ($nominal, array_column ($this->first_data, "nominal"));
-            $is_valid_count = $count > 0;
-
-            if ($key !== false and $is_valid_count and $is_sufficient = $this->first_data[$key]["count"] >= $count) {
-               if ($this->confirm ($nominal, $count, false)) {
-                  $this->first_data[$key]["count"] -= $count;
-                  $this->cache_data ();
-                  echo "Nominal '$nominal' berkurang '$count'\n";
-               }
-               else
-                  echo "Nominal '$nominal' batal dikurangi '$count'.\n";
-            }
-
-            if ($key === false) fwrite (STDERR, "Peringatan: nominal '$nominal' di parameter ke $nth tidak valid, nominal yang valid adalah 500 dan 1000.\n");
-            if (!$is_valid_count) fwrite (STDERR, "Peringatan: jumlah '$count' di parameter ke $nth tidak valid, jumlah yang valid harus lebih besar dari 0.\n");
-            if (isset ($is_sufficient) and !$is_sufficient) fwrite (STDERR, "Peringatan: jumlah nominal tidak cukup, nominal '$nominal' hanya '{$this->first_data[$key]["count"]}'.\n");
-         }
-         else
-            fwrite (STDERR, "Peringatan: argumen '$argument' di parameter ke $nth tidak valid.\n");
-      }
-   }
-
-   private function format_number ($number) {
-      $reverse_string = strrev ($number);
-      $strings = str_split ($reverse_string, 3);
-      $reverse_glued_string = implode (".", $strings);
-      return strrev ($reverse_glued_string);
-   }
-
-   private function finance_total () {
-      $this->total = 0;
-
-      $nominals = array_column ($this->data, "nominal");
+   public function spending ($arguments) {
+      $initial_data = $this->data;
       $counts = array_column ($this->data, "count");
 
-      foreach ($nominals as $i => $nominal) {
-         $this->total += $nominal * $counts[$i];
+      foreach ($arguments as $pointer => $argument) {
+         $nth = $pointer + 2;
+
+         if (preg_match ("!^(500{1,3}|1000{1,3}|2000{1,2})(=|:)([1-9][0-9]*)$!", $argument, $items)) {
+            if ($items[2] === ":") {
+               switch ($items[1]) {
+                  case "500":
+                     $this->data[0]["count"] >= $items[3] ? $this->data[0]["count"] -= $items[3] : $i = 0;
+                     break;
+                  case "1000":
+                     $this->data[1]["count"] >= $items[3] ? $this->data[1]["count"] -= $items[3] : $i = 1;
+                     break;
+                  default:
+                     $this->succeed = false;
+                     $this->error_message = "Eror fatal: nominal '$items[1]' pada parameter ke $nth tidak valid.\n";
+                     return null;
+               }
+            }
+            else {
+               switch ($items[1]) {
+                  case "1000":
+                     $this->data[2]["count"] >= $items[3] ? $this->data[2]["count"] -= $items[3] : $i = 2;
+                     break;
+                  case "2000":
+                     $this->data[3]["count"] >= $items[3] ? $this->data[3]["count"] -= $items[3] : $i = 3;
+                     break;
+                  case "5000":
+                     $this->data[4]["count"] >= $items[3] ? $this->data[4]["count"] -= $items[3] : $i = 4;
+                     break;
+                  case "10000":
+                     $this->data[5]["count"] >= $items[3] ? $this->data[5]["count"] -= $items[3] : $i = 5;
+                     break;
+                  case "20000":
+                     $this->data[6]["count"] >= $items[3] ? $this->data[6]["count"] -= $items[3] : $i = 6;
+                     break;
+                  case "50000":
+                     $this->data[7]["count"] >= $items[3] ? $this->data[7]["count"] -= $items[3] : $i = 7;
+                     break;
+                  case "100000":
+                     $this->data[8]["count"] >= $items[3] ? $this->data[8]["count"] -= $items[3] : $i = 8;
+                     break;
+                  default:
+                     $this->succeed = false;
+                     $this->error_message = "Eror fatal: nominal '$items[1]' pada parameter ke $nth tidak valid.\n";
+                     return null;
+               }
+
+               if (isset ($i)) {
+                  $this->succeed = false;
+                  $this->error_message = "Eror fatal: nominal '{$this->data[$i]["nominal"]}' pada paramter ke $nth hanya '{$this->data[$i]["count"]}', tidak cukup.\n";
+                  return null;
+               }
+            }
+         }
+         else {
+            $this->succeed = false;
+            $this->error_message = "Eror fatal: argumen '$argument' pada parameter ke $nth tidak valid.\n";
+            return null;
+         }
       }
-      $this->total = $this->format_number ($this->total);
+
+      if ($this->confirm_spending ($initial_data, $this->data)) {
+         $this->succeed = true;
+         $this->count_total ();
+         $this->cache_data ();
+      }
+      else {
+         $this->succeed = false;
+         $this->error_message = "Pengeluaran uang dibatalkan.\n";
+      }
    }
 
-   public function list_finance () {
-      $lengths = [strlen($this->data[0]["count"]), strlen($this->data[1]["count"]), strlen ($this->data[2]["count"]), strlen ($this->data[3]["count"]), strlen ($this->data[4]["count"])];
-      $space = max ($lengths) + 3;
-      echo "\e[1m***\e[0m \e[34;1mFINANCE\e[0m \e[1m***\e[0m\n";
-      printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${space}s\e[0m\e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $this->data[0]["nominal"], $this->data[0]["count"], $this->data[5]["nominal"], $this->data[5]["count"]);
-      printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${space}s\e[0m\e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $this->data[1]["nominal"], $this->data[1]["count"], $this->data[6]["nominal"], $this->data[6]["count"]);
-      printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${space}s\e[0m\e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $this->data[2]["nominal"], $this->data[2]["count"], $this->data[7]["nominal"], $this->data[7]["count"]);
-      printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${space}s\e[0m\e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $this->data[3]["nominal"], $this->data[3]["count"], $this->data[8]["nominal"], $this->data[8]["count"]);
-      printf ("    \e[34;1m%-4s\e[0m: \e[1m%s\e[0m\n\n", $this->data[4]["nominal"], $this->data[4]["count"]);
-      $this->finance_total ();
-      echo "    \e[34;1mTOTAL\e[0m: \e[1mRp $this->total\e[0m\n";
+   public function get_succeed () {
+      return $this->succeed;
    }
 
-   private function confirm ($nominal, $count, $type) {
-      if ($type)
-         $text = "bertambah";
+   public function get_error_message () {
+      return $this->error_message;
+   }
+
+   private function confirm_revenue ($initial_data, $final_data) {
+      $prompt = "\e[1m***\e[0m \e[34;1mFINANCE\e[0m \e[1m***\e[0m\n    \e[34;1mAnda akan menambahkan uang\e[0m:\n";
+      $total = 0;
+
+      foreach ($initial_data as $i => $init_data) {
+         if ($init_data["count"] !== $final_data[$i]["count"]) {
+            $multiplier = $final_data[$i]["count"] - $init_data["count"];
+            $prompt .= sprintf ("        \e[34;1m%d\e[0m (\e[34;1m%d\e[0m)\n", $init_data["nominal"], $multiplier);
+            $total += $init_data["nominal"] * $multiplier;
+         }
+      }
+
+      printf ("%s        \e[34;1mTOTAL\e[0m: Rp %s\n\napa anda yakin (Y/n) > ", $prompt, format_number ($total));
+      $input = readline ();
+
+      if ($input === "y" or $input === "Y")
+         return true;
       else
-         $text = "berkurang";
-
-      $total = $this->format_number ($nominal * $count);
-      while (true) {
-         echo "Konfirmasi nominal '$nominal' akan $text '$count' (Rp $total) > ";
-         $input = readline ();
-
-         if ($input === "Y" or $input === "y")
-            return true;
-         elseif ($input === "N" or $input === "n")
-            return false;
-         else
-            echo "\e[1F\e[0J";
-      }
+         return false;
    }
 
-   public function __construct ($arguments, $count_arguments) {
-      $this->load_data ();
-      $this->arguments = array_slice ($arguments, 2);
-      $this->count_arguments = $count_arguments;
+   private function confirm_spending ($initial_data, $final_data) {
+      $prompt = "\e[1m***\e[0m \e[34;1mFINANCE\e[0m \e[1m***\e[0m\n    \e[34;1mAnda akan mengeluarkan uang\e[0m:\n";
+      $total = 0;
+
+      foreach ($initial_data as $i => $init_data) {
+         if ($init_data["count"] !== $final_data[$i]["count"]) {
+            $multiplier = $init_data["count"] - $final_data[$i]["count"];
+            $prompt .= sprintf ("        \e[34;1m%d\e[0m (\e[34;1m%d\e[0m)\n", $init_data["nominal"], $multiplier);
+            $total += $init_data["nominal"] * $multiplier;
+         }
+      }
+
+      printf ("%s        \e[34;1mTOTAL\e[0m: Rp %s\n\napa anda yakin (Y/n) > ", $prompt, format_number ($total));
+      $input = readline ();
+
+      if ($input === "y" or $input === "Y")
+         return true;
+      else
+         return false;
    }
 }
 
+function format_number ($number) {
+   $reversed_number = strrev ($number);
+   $numbers = str_split ($reversed_number, 3);
+   $reversed_glued_number = implode (".", $numbers);
+   return strrev ($reversed_glued_number);
+}
+
+function list_finance (finance $finance) {
+   $data = $finance->get_data ();
+   $i = strlen (max (array_column ($data, "count"))) + 2;
+   echo "\e[1m***\e[0m \e[34;1mFINANCE\e[0m \e[1m***\e[0m\n";
+   printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${i}s\e[0m \e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $data[0]["nominal"], $data[0]["count"], $data[5]["nominal"], $data[5]["count"]);
+   printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${i}s\e[0m \e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $data[1]["nominal"], $data[1]["count"], $data[6]["nominal"], $data[6]["count"]);
+   printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${i}s\e[0m \e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $data[2]["nominal"], $data[2]["count"], $data[7]["nominal"], $data[7]["count"]);
+   printf ("    \e[34;1m%-4s\e[0m: \e[1m%-${i}s\e[0m \e[34;1m%-6s\e[0m: \e[1m%s\e[0m\n", $data[3]["nominal"], $data[3]["count"], $data[8]["nominal"], $data[8]["count"]);
+   printf ("    \e[34;1m%-4s\e[0m: \e[1m%s\e[0m\n\n", $data[4]["nominal"], $data[4]["count"]);
+   printf ("    \e[34;1mTOTAL\e[0m: \e[1mRp %s\e[0m\n", format_number ($finance->get_total ()));
+}
+
+function error_finance (finance $finance) {
+   fwrite (STDERR, $finance->get_error_message ());
+   exit (1);
+}
+
 function main ($arguments, $count_arguments) {
-   $finance = new finance ($arguments, $count_arguments);
+   $finance = new finance ();
 
    if ($count_arguments === 1) {
-      $finance->list_finance ();
+      list_finance ($finance);
    }
    else {
       switch ($arguments[1]) {
-      case "-r": case "--revenue":
-         $finance->revenue ();
+      case "-r":
+         $finance->revenue (array_slice ($arguments, 2));
+
+         if ($finance->get_succeed ())
+            echo "Pemasukkan uang berhasil dilakukan.\n";
+         else
+            error_finance ($finance);
          break;
-      case "-s": case "--spending":
-         $finance->spending ();
+      case "-s":
+         $finance->spending (array_slice ($arguments, 2));
+
+         if ($finance->get_succeed ())
+            echo "Pengeluaran uang berhasil dilakukan.\n";
+         else
+           error_finance ($finance);
          break;
-      case "-l": case "--list":
-         $finance->list_finance ();
+      case "-l":
+         list_finance ($finance);
          break;
       default:
-         fwrite (STDERR, "Eror fatal: argumen pertama '$arguments[1]' tidak valid.\n");
+         fwrite (STDERR, "Eror fatal: argumen '$arguments[1]' tidak valid.\n");
+         exit (1);
          break;
       }
    }
