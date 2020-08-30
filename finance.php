@@ -252,35 +252,80 @@ function error_finance (finance $finance) {
    exit (1);
 }
 
+function log_data ($data, $status)  {
+   $log_filename = __DIR__ . "\.cache.log";
+   $contents = str_replace ("none", $status, $data);
+
+   if (file_put_contents ($log_filename, $contents, FILE_APPEND))
+      return true;
+   else
+      return false;
+}
+
 function main ($arguments, $count_arguments) {
    $finance = new finance ();
+   $searches = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "January", "February", "March", "May", "June", "July", "August", "October", "December"];
+   $replacements = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Januari", "Februari", "Maret", "Mei", "Juni", "Juli", "Agustus", "Oktober", "Desember"];
+   date_default_timezone_set ("Asia/Jakarta");
+   $date = str_replace ($searches, $replacements, date ("l, j F Y - H:i:s"));
+   $command = "finance " . implode (" ", array_slice ($arguments, 1));
+   $log_data = "$date -> $command\nstatus: none\n\n";
 
    if ($count_arguments === 1) {
       list_finance ($finance);
+      log_data ($log_data, "true");
    }
    else {
       switch ($arguments[1]) {
       case "-r":
          $finance->revenue (array_slice ($arguments, 2));
 
-         if ($finance->get_succeed ())
+         if ($finance->get_succeed ()) {
             echo "Pemasukkan uang berhasil dilakukan.\n";
-         else
+            log_data ($log_data, "true");
+         }
+         else {
+            log_data ($log_data, "false");
             error_finance ($finance);
+         }
          break;
       case "-s":
          $finance->spending (array_slice ($arguments, 2));
 
-         if ($finance->get_succeed ())
+         if ($finance->get_succeed ()) {
             echo "Pengeluaran uang berhasil dilakukan.\n";
-         else
-           error_finance ($finance);
+            log_data ($log_data, "true");
+         }
+         else {
+            log_data ($log_data, "false");
+            error_finance ($finance);
+         }
          break;
       case "-l":
          list_finance ($finance);
+         log_data ($log_data, "true");
+         break;
+      case "-h":
+echo <<< 'help'
+finance: A simple financial manager.
+    Usage: finance [-l]|[-s|-r] <arguments...>
+
+option:
+    -r, set money to be a revenue.
+    -s, set money to be spending out.
+
+arguments:
+    nominal:
+        500, 1000, 2000, 5000, 10000, 20000, 50000, 100000.
+    count:
+        greater than 0.
+AUTHOR: Zulfilham";
+help;
+         log_data ($log_data, "true");
          break;
       default:
          fwrite (STDERR, "Eror fatal: argumen '$arguments[1]' tidak valid.\n");
+         log_data ($log_data, "error");
          exit (1);
          break;
       }
