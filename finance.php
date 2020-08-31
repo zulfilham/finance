@@ -90,14 +90,18 @@ class finance {
          }
       }
 
-      if ($this->confirm_revenue ($initial_data, $this->data)) {
+      if (empty ($arguments)) {
+         $this->succeed = false;
+         $this->error_message = "Eror fatal: tidak ada argumen pada opsi -r.\n";
+      }
+      elseif ($this->confirm_revenue ($initial_data, $this->data)) {
          $this->succeed = true;
          $this->count_total ();
          $this->cache_data ();
       }
       else {
          $this->succeed = false;
-         $this->error_message .= "Pemasukkan uang dibatalkan.\n";
+         $this->error_message = "Pemasukkan uang dibatalkan.\n";
       }
    }
 
@@ -166,7 +170,11 @@ class finance {
          }
       }
 
-      if ($this->confirm_spending ($initial_data, $this->data)) {
+      if (empty ($arguments)) {
+         $this->succeed = false;
+         $this->error_message = "Eror fatal: tidak ada argumen pada opsi -s.\n";
+      }
+      elseif ($this->confirm_spending ($initial_data, $this->data)) {
          $this->succeed = true;
          $this->count_total ();
          $this->cache_data ();
@@ -319,7 +327,8 @@ arguments:
         500, 1000, 2000, 5000, 10000, 20000, 50000, 100000.
     count:
         greater than 0.
-AUTHOR: Zulfilham";
+AUTHOR: Zulfilham
+
 help;
          log_data ($log_data, "true");
          break;
