@@ -2,7 +2,7 @@
 
 class finance {
    private $data = [["nominal" => 500, "count" => 0], ["nominal" => 1000, "count" => 0], ["nominal" => 1000, "count" => 0], ["nominal" => 2000, "count" => 0], ["nominal" => 5000, "count" => 0], ["nominal" => 10000, "count" => 0], ["nominal" => 20000, "count" => 0], ["nominal" => 50000, "count" => 0], ["nominal" => 100000, "count" => 0]];
-   private $data_filename = __DIR__ . "\.cache.dat";
+   private $data_filename = __DIR__ . "/.cache.dat";
    private $total = 0;
    private $succeed, $error_message;
 
