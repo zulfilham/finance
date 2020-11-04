@@ -155,12 +155,12 @@ class finance {
                      $this->error_message = "Eror fatal: nominal '$items[1]' pada parameter ke $nth tidak valid.\n";
                      return null;
                }
+            }
 
-               if (isset ($i)) {
-                  $this->succeed = false;
-                  $this->error_message = "Eror fatal: nominal '{$this->data[$i]["nominal"]}' pada paramter ke $nth hanya '{$this->data[$i]["count"]}', tidak cukup.\n";
-                  return null;
-               }
+            if (isset ($i)) {
+               $this->succeed = false;
+               $this->error_message = "Eror fatal: nominal '{$this->data[$i]["nominal"]}' pada paramter ke $nth hanya '{$this->data[$i]["count"]}', tidak cukup.\n";
+               return null;
             }
          }
          else {
