@@ -316,19 +316,23 @@ function main ($arguments, $count_arguments) {
       case "-h":
 echo <<< 'help'
 finance: A simple financial manager.
-    Usage: finance [-l]|[-s|-r] <arguments...>
+    Usage: finance [-lh]
+           finance [-s | -r] <format>...
 
 option:
-    -r, set money to be a revenue.
-    -s, set money to be spending out.
+    -r <format>,   set money to be a revenue.
+    -s <format>,   set money to be spending out.
 
-arguments:
-    nominal:
-        500, 1000, 2000, 5000, 10000, 20000, 50000, 100000.
-    count:
-        greater than 0.
-AUTHOR: Zulfilham
+format:
+   The format contains 2 arguments: nominal, and count. They are merged
+   either with ':' or '=', coin nominals are using ':' while sheet
+   nominals are using '='.
 
+   nominal:
+      500, 1000, 2000, 5000, 10000, 20000, 50000, 100000.
+   count:
+      greater than 0.
+AUTHOR: Zulfilham\n
 help;
          log_data ($log_data, "true");
          break;
