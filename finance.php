@@ -261,7 +261,7 @@ function error_finance (finance $finance) {
 }
 
 function log_data ($data, $status)  {
-   $log_filename = __DIR__ . "\.cache.log";
+   $log_filename = __DIR__ . "/.cache.log";
    $contents = str_replace ("none", $status, $data);
 
    if (file_put_contents ($log_filename, $contents, FILE_APPEND))
